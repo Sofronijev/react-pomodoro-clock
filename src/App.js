@@ -13,6 +13,7 @@ function App() {
   const [timerType, setTimerType] = useState("Session")
   const [mainColor, setMainColor] = useState("#d53d32")
   const [secondColor, setSecondColor] = useState("#f75f54")
+  const [canChangeTimer, setCanChangeTimer] = useState(true)
   const audio = useRef(null)
 
   useEffect(() => {
@@ -46,25 +47,27 @@ function App() {
   }
 
   function changeTime(e) {
-    const { id } = e.target;
-    switch (id) {
-      case "break-increment":
-        const breakInc = breakLength < 60 ? 1 : 0;
-        setBreakLength(prevBreakLength => prevBreakLength + breakInc)
-        break;
-      case "break-decrement":
-        const breakDec = breakLength > 1 ? 1 : 0;
-        setBreakLength(prevBreakLength => prevBreakLength - breakDec)
-        break;
-      case "session-increment":
-        const sessionInc = sessionLength < 60 ? 1 : 0;
-        setSessionLength(prevSessionLength => prevSessionLength + sessionInc)
-        setTimer(prevTimer => prevTimer + 60 * sessionInc)
-        break;
-      default:
-        const sessionDec = sessionLength > 1 ? 1 : 0;
-        setSessionLength(prevSessionLength => prevSessionLength - sessionDec)
-        setTimer(prevTimer => prevTimer - 60 * sessionDec)
+    if (canChangeTimer) {
+      const { id } = e.target;
+      switch (id) {
+        case "break-increment":
+          const breakInc = breakLength < 60 ? 1 : 0;
+          setBreakLength(prevBreakLength => prevBreakLength + breakInc)
+          break;
+        case "break-decrement":
+          const breakDec = breakLength > 1 ? 1 : 0;
+          setBreakLength(prevBreakLength => prevBreakLength - breakDec)
+          break;
+        case "session-increment":
+          const sessionInc = sessionLength < 60 ? 1 : 0;
+          setSessionLength(prevSessionLength => prevSessionLength + sessionInc)
+          setTimer(prevTimer => prevTimer + 60 * sessionInc)
+          break;
+        default:
+          const sessionDec = sessionLength > 1 ? 1 : 0;
+          setSessionLength(prevSessionLength => prevSessionLength - sessionDec)
+          setTimer(prevTimer => prevTimer - 60 * sessionDec)
+      }
     }
   }
 
@@ -104,10 +107,12 @@ function App() {
     } else {
       setIsRunning(true)
     }
+    setCanChangeTimer(false)
   }
 
   function stopCountdown() {
     setIsRunning(false)
+    setCanChangeTimer(true)
   }
 
   function playSound() {

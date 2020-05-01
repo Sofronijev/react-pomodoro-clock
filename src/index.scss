@@ -8,6 +8,8 @@ $second_color: #f75f54;
 html,
 body {
   margin: 0;
+  // stavio sam i ovde backgorund color jer zbog trasnition efekta kad se prvi put ucita aplikacije pozadina je prvo bela pa predje u crvenu
+  background-color: $second_color;
 }
 #root {
   height: 100vh;
@@ -15,6 +17,8 @@ body {
   justify-content: center;
   align-items: center;
   background-color: $second_color;
+  transition: background 0.5s ease-in-out;
+
 }
 h1 {
   margin: 0;
@@ -29,6 +33,7 @@ h1 {
   padding: 30px;
   text-align: center;
   font-weight: bold;
+  transition: background-color 0.5s ease-in-out;
 }
 .timer {
   font-size: 3.5em;
@@ -75,6 +80,7 @@ h1 {
   align-self: center;
   justify-self: center;
   border: 1px solid #fff;
+  transition: background 0.5s ease-in-out;
 }
 .buttons:hover {
   cursor: pointer;
