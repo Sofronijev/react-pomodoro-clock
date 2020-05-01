@@ -1,202 +1,167 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TimerControl from './components/TimerControl'
 import Timer from './components/Timer'
 import ControlButtons from './components/ControlButtons'
+import sound from './sound/bell.mp3'
+import useInterval from './hooks/useInterval'
 
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      breakLength: 5,
-      sessionLength: 25,
-      // times is time in seconds
-      timer: 1500,
-      isRunning: false,
-      timerType: "Session"
+function App() {
+
+  const [breakLength, setBreakLength] = useState(1)
+  const [sessionLength, setSessionLength] = useState(1)
+  const [timer, setTimer] = useState(60)
+  const [isRunning, setIsRunning] = useState(false)
+  const [timerType, setTimerType] = useState("Session")
+  const audio = useRef(null)
+
+  useEffect(() => {
+    if (timer === 0) {
+      playSound();
     }
-    this.increaseTime = this.increaseTime.bind(this);
-    this.decreaseTime = this.decreaseTime.bind(this);
-    this.resetTime = this.resetTime.bind(this);
-    this.createTimer = this.createTimer.bind(this);
-    this.countdown = this.countdown.bind(this);
-    this.startCountdown = this.startCountdown.bind(this);
-    this.stopCountdown = this.stopCountdown.bind(this);
-    this.playSound = this.playSound.bind(this);
-    this.stopSound = this.stopSound.bind(this);
-  }
+  }, [timer])
 
-  componentDidMount() {
-    this.audio = document.getElementById("beep");
-  }
-
-  createTimer() {
-    let minutes = Math.floor(this.state.timer / 60);
-    let seconds = this.state.timer - minutes * 60;
+  function createTimer() {
+    let minutes = Math.floor(timer / 60);
+    let seconds = timer - minutes * 60;
     minutes = minutes < 10 ? "0" + minutes : minutes;
     seconds = seconds < 10 ? "0" + seconds : seconds;
     return `${minutes}:${seconds}`;
   }
 
-  increaseTime(e) {
-    if (!this.state.isRunning) {
-      if (e.target.id === "break-increment") {
-        if (this.state.breakLength >= 60) {
+  function increaseTime(e) {
+    const { id } = e.target;
+    if (!isRunning) {
+      if (id === "break-increment") {
+        if (breakLength >= 60) {
           return;
         }
-        this.setState(state => {
-          return { breakLength: state.breakLength + 1 }
-        })
-      } else if (e.target.id === "session-increment") {
-        if (this.state.sessionLength >= 60) {
+        setBreakLength(prevBreakLength => prevBreakLength + 1)
+      } else if (id === "session-increment") {
+        if (sessionLength >= 60) {
           return;
         }
-        this.setState(state => {
-          return {
-            sessionLength: state.sessionLength + 1,
-            timer: state.timer + 60
-          }
-        })
+
+        setSessionLength(prevSeasonength => prevSeasonength + 1)
+        setTimer(prevTimer => prevTimer + 60)
       }
     }
   }
 
-  decreaseTime(e) {
-    if (!this.state.isRunning) {
-      if (e.target.id === "break-decrement") {
-        if (this.state.breakLength <= 1) {
+  function decreaseTime(e) {
+    const { id } = e.target;
+    if (!isRunning) {
+      if (id === "break-decrement") {
+        if (breakLength <= 1) {
           return;
         }
-        this.setState(state => {
-          return { breakLength: state.breakLength - 1 }
-        })
-      } else if (e.target.id === "session-decrement") {
-        if (this.state.sessionLength <= 1) {
+
+        setBreakLength(prevBreakLength => prevBreakLength - 1)
+      } else if (id === "session-decrement") {
+        if (sessionLength <= 1) {
           return;
         }
-        this.setState(state => {
-          return {
-            sessionLength: state.sessionLength - 1,
-            timer: state.timer - 60
-          }
-        })
+        setSessionLength(prevSeasonength => prevSeasonength - 1)
+        setTimer(prevTimer => prevTimer - 60)
       }
     }
   }
-  resetTime() {
-    this.stopCountdown();
-    this.stopSound()
-    this.setState({
-      breakLength: 5,
-      sessionLength: 25,
-      timer: 1500,
-      isRunning: false,
-      timerType: "Session"
-    })
+
+  function resetTime() {
+    stopCountdown();
+    stopSound()
+    setBreakLength(5)
+    setSessionLength(25)
+    setTimer(1500)
+    setIsRunning(false)
+    setTimerType("Session")
+
   }
-
-  countdown() {
-    this.interval = setInterval(() => {
-
-      if (this.state.timerType === "Session") {
-        if (this.state.timer > 0) {
-          this.setState(state => {
-            return { timer: state.timer - 1 }
-          }, () => {
-            if (this.state.timer === 0) {
-              this.playSound();
-            }
-          })
-        } else {
-          this.setState({
-            timerType: "Break",
-            timer: this.state.breakLength * 60
-          });
-        }
-      } else if (this.state.timerType === "Break") {
-        if (this.state.timer > 0) {
-          this.setState(state => {
-            return { timer: state.timer - 1 }
-          }, () => {
-            if (this.state.timer === 0) {
-              this.playSound();
-            }
-          })
-        } else {
-          this.setState({
-            timerType: "Session",
-            timer: this.state.sessionLength * 60
-          });
-        }
+  //Ovaj deo pokrece tajmere kad je isRunning === True
+  useInterval(() => {
+    if (timerType === "Session") {
+      if (timer > 0) {
+        setTimer(prevTimer => prevTimer - 1)
+      } else {
+        setTimerType("Break")
+        setTimer(breakLength * 60)
       }
-    }, 1000);
-  }
+    } else if (timerType === "Break") {
+      if (timer > 0) {
+        setTimer(prevTimer => prevTimer - 1)
+      } else {
+        setTimerType("Session")
+        setTimer(sessionLength * 60)
+      }
+    }
+  }, isRunning ? 100 : null);
 
-  startCountdown() {
-    if (this.state.isRunning) {
-      this.setState({
-        isRunning: false
-      }, this.stopCountdown());
+
+  function toggleCountdown() {
+    if (isRunning) {
+      setIsRunning(false)
+      stopCountdown()
     } else {
-      this.setState({
-        isRunning: true
-      }, this.countdown());
+      setIsRunning(true)
     }
   }
 
-  stopCountdown() {
-    clearInterval(this.interval)
+  function stopCountdown() {
+    setIsRunning(false)
   }
 
-  playSound() {
-    this.audio.currentTime = 0;
-    this.audio.play();
+  function playSound() {
+    audio.current.currentTime = 0;
+    audio.current.play();
   }
-  stopSound() {
-    this.audio.pause();
-    this.audio.currentTime = 0;
-  }
-  render() {
-    return (
-      <div className="App">
-        <h1>Pomodoro clock</h1>
-        <Timer
-          timerType={this.state.timerType}
-          breakLength={this.state.breakLength}
-          sessionLength={this.state.sessionLength}
-          timer={this.state.timer}
-          createTimer={this.createTimer}
-        />
-        <TimerControl
-          labelId={"break-label"}
-          incrementId={"break-increment"}
-          decrementId={"break-decrement"}
-          lengthId={"break-length"}
-          title={"Break Length"}
-          length={this.state.breakLength}
-          increaseTime={this.increaseTime}
-          decreaseTime={this.decreaseTime}
-        />
-        <TimerControl
-          labelId={"session-label"}
-          incrementId={"session-increment"}
-          decrementId={"session-decrement"}
-          lengthId={"session-length"}
-          title={"Session Length"}
-          length={this.state.sessionLength}
-          increaseTime={this.increaseTime}
-          decreaseTime={this.decreaseTime}
-        />
-        <ControlButtons
-          resetTime={this.resetTime}
-          startCountdown={this.startCountdown}
-          stopCountdown={this.stopCountdown}
-          isRunning={this.state.isRunning}
-        />
-      </div>
-    );
+  function stopSound() {
+    audio.current.pause();
+    audio.current.currentTime = 0;
   }
 
+  return (
+    <div className="App">
+      <h1>Pomodoro clock</h1>
+      <Timer
+        timerType={timerType}
+        breakLength={breakLength}
+        sessionLength={sessionLength}
+        timer={timer}
+        createTimer={createTimer}
+      />
+      <TimerControl
+        labelId={"break-label"}
+        incrementId={"break-increment"}
+        decrementId={"break-decrement"}
+        lengthId={"break-length"}
+        title={"Break Length"}
+        length={breakLength}
+        increaseTime={increaseTime}
+        decreaseTime={decreaseTime}
+      />
+      <TimerControl
+        labelId={"session-label"}
+        incrementId={"session-increment"}
+        decrementId={"session-decrement"}
+        lengthId={"session-length"}
+        title={"Session Length"}
+        length={sessionLength}
+        increaseTime={increaseTime}
+        decreaseTime={decreaseTime}
+      />
+      <ControlButtons
+        resetTime={resetTime}
+        toggleCountdown={toggleCountdown}
+        stopCountdown={stopCountdown}
+        isRunning={isRunning}
+      />
+      <audio
+        id="beep"
+        src={sound}
+        ref={audio}
+      />
+    </div>
+  );
 }
 
 export default App;
