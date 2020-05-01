@@ -5,16 +5,32 @@ import ControlButtons from './components/ControlButtons'
 import sound from './sound/bell.mp3'
 import useInterval from './hooks/useInterval'
 
-
 function App() {
-
-  const [breakLength, setBreakLength] = useState(1)
-  const [sessionLength, setSessionLength] = useState(1)
-  const [timer, setTimer] = useState(60)
+  const [breakLength, setBreakLength] = useState(5)
+  const [sessionLength, setSessionLength] = useState(25)
+  const [timer, setTimer] = useState(1500)
   const [isRunning, setIsRunning] = useState(false)
   const [timerType, setTimerType] = useState("Session")
+  const [mainColor, setMainColor] = useState("#d53d32")
+  const [secondColor, setSecondColor] = useState("#f75f54")
   const audio = useRef(null)
 
+  useEffect(() => {
+    if (timerType === "Session") {
+      setMainColor("#d53d32")
+      setSecondColor("#f75f54")
+    } else {
+      setMainColor("#52bc6e")
+      setSecondColor("#78de93")
+    }
+  }, [timerType])
+
+  useEffect(() => {
+    const rootElem = document.querySelector("#root");
+    rootElem.style.backgroundColor = secondColor;
+  }, [secondColor])
+
+  //play sound when timer reaches 0
   useEffect(() => {
     if (timer === 0) {
       playSound();
@@ -29,41 +45,26 @@ function App() {
     return `${minutes}:${seconds}`;
   }
 
-  function increaseTime(e) {
+  function changeTime(e) {
     const { id } = e.target;
-    if (!isRunning) {
-      if (id === "break-increment") {
-        if (breakLength >= 60) {
-          return;
-        }
-        setBreakLength(prevBreakLength => prevBreakLength + 1)
-      } else if (id === "session-increment") {
-        if (sessionLength >= 60) {
-          return;
-        }
-
-        setSessionLength(prevSeasonength => prevSeasonength + 1)
-        setTimer(prevTimer => prevTimer + 60)
-      }
-    }
-  }
-
-  function decreaseTime(e) {
-    const { id } = e.target;
-    if (!isRunning) {
-      if (id === "break-decrement") {
-        if (breakLength <= 1) {
-          return;
-        }
-
-        setBreakLength(prevBreakLength => prevBreakLength - 1)
-      } else if (id === "session-decrement") {
-        if (sessionLength <= 1) {
-          return;
-        }
-        setSessionLength(prevSeasonength => prevSeasonength - 1)
-        setTimer(prevTimer => prevTimer - 60)
-      }
+    switch (id) {
+      case "break-increment":
+        const breakInc = breakLength < 60 ? 1 : 0;
+        setBreakLength(prevBreakLength => prevBreakLength + breakInc)
+        break;
+      case "break-decrement":
+        const breakDec = breakLength > 1 ? 1 : 0;
+        setBreakLength(prevBreakLength => prevBreakLength - breakDec)
+        break;
+      case "session-increment":
+        const sessionInc = sessionLength < 60 ? 1 : 0;
+        setSessionLength(prevSessionLength => prevSessionLength + sessionInc)
+        setTimer(prevTimer => prevTimer + 60 * sessionInc)
+        break;
+      default:
+        const sessionDec = sessionLength > 1 ? 1 : 0;
+        setSessionLength(prevSessionLength => prevSessionLength - sessionDec)
+        setTimer(prevTimer => prevTimer - 60 * sessionDec)
     }
   }
 
@@ -94,8 +95,7 @@ function App() {
         setTimer(sessionLength * 60)
       }
     }
-  }, isRunning ? 100 : null);
-
+  }, isRunning ? 1000 : null);
 
   function toggleCountdown() {
     if (isRunning) {
@@ -120,7 +120,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div className="App" style={{ backgroundColor: mainColor }}>
       <h1>Pomodoro clock</h1>
       <Timer
         timerType={timerType}
@@ -136,8 +136,9 @@ function App() {
         lengthId={"break-length"}
         title={"Break Length"}
         length={breakLength}
-        increaseTime={increaseTime}
-        decreaseTime={decreaseTime}
+        changeTime={changeTime}
+        secondColor={secondColor}
+
       />
       <TimerControl
         labelId={"session-label"}
@@ -146,14 +147,15 @@ function App() {
         lengthId={"session-length"}
         title={"Session Length"}
         length={sessionLength}
-        increaseTime={increaseTime}
-        decreaseTime={decreaseTime}
+        changeTime={changeTime}
+        secondColor={secondColor}
       />
       <ControlButtons
         resetTime={resetTime}
         toggleCountdown={toggleCountdown}
         stopCountdown={stopCountdown}
         isRunning={isRunning}
+        secondColor={secondColor}
       />
       <audio
         id="beep"
