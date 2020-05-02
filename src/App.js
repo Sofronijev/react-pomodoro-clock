@@ -15,6 +15,7 @@ function App() {
   const [secondColor, setSecondColor] = useState("#f75f54")
   const [canChangeTimer, setCanChangeTimer] = useState(true)
   const audio = useRef(null)
+  const rootElement = useRef(document.querySelector("#root"))
 
   useEffect(() => {
     if (timerType === "Session") {
@@ -27,8 +28,7 @@ function App() {
   }, [timerType])
 
   useEffect(() => {
-    const rootElem = document.querySelector("#root");
-    rootElem.style.backgroundColor = secondColor;
+    rootElement.current.style.backgroundColor = secondColor;
   }, [secondColor])
 
   //play sound when timer reaches 0
